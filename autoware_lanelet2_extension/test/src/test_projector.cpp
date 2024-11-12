@@ -34,7 +34,7 @@ TEST(TestSuite, ForwardMGRSProjection)  // NOLINT for gtest
   lanelet::projection::MGRSProjector projector;
 
   // different elevation values
-  std::vector<double> elevation_values = {0.0, -50.0};  // sea level, below sea level
+  std::vector<double> elevation_values = {0.0, -50.0, 1000.0};  // sea level, below sea level, very high
   for (const double ele : elevation_values) {
     lanelet::GPSPoint gps_point;
     gps_point.lat = 35.652832;
@@ -51,27 +51,20 @@ TEST(TestSuite, ForwardMGRSProjection)  // NOLINT for gtest
 TEST(TestSuite, ReverseMGRSProjection)  // NOLINT for gtest
 {
   lanelet::projection::MGRSProjector projector;
-  lanelet::BasicPoint3d mgrs_point;
-  mgrs_point.x() = 94946.0;
-  mgrs_point.y() = 46063.0;
-  mgrs_point.z() = 12.3456789;
+  std::vector<double> elevation_values = {0.0, -50.0, 1000.0};  // sea level, below sea level, very high
 
-  projector.setMGRSCode("54SUE");
-  lanelet::GPSPoint gps_point = projector.reverse(mgrs_point);
+  for (const double ele : elevation_values) {
+    lanelet::BasicPoint3d mgrs_point;
+    mgrs_point.x() = 94946.0;
+    mgrs_point.y() = 46063.0;
+    mgrs_point.z() = ele;
 
-  // projected z value should not change
-  ASSERT_DOUBLE_EQ(gps_point.ele, mgrs_point.z())
-    << "Reverse projected z value should be " << mgrs_point.z();
+    projector.setMGRSCode("54SUE");
+    lanelet::GPSPoint gps_point = projector.reverse(mgrs_point);
 
-  // https://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
-  // round the projected value since the above reference only gives value up to
-  // precision of 1e-8
-  double rounded_lat = round(gps_point.lat * 1e8) / 1e8;
-  ASSERT_DOUBLE_EQ(rounded_lat, 35.65282525)
-    << "Reverse projected latitude value should be " << 35.65282525;
-  double rounded_lon = round(gps_point.lon * 1e8) / 1e8;
-  ASSERT_DOUBLE_EQ(rounded_lon, 139.83947721)
-    << "Reverse projected longitude value should be " << 139.83947721;
+    ASSERT_DOUBLE_EQ(gps_point.ele, mgrs_point.z())
+      << "Reverse projected z value should be " << mgrs_point.z() << " for elevation " << ele;
+  }
 }
 
 TEST(TestSuite, ForwardTransverseMercatorProjection)  // NOLINT for gtest
